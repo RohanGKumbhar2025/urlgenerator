@@ -1,0 +1,191 @@
+<!-- views/home.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 20px;
+    }
+    .url-card {
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+    .header-icon {
+      margin-right: 10px;
+      color: #0d6efd;
+    }
+    .generated-url {
+      margin: 15px 0;
+    }
+    .qr-code {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">URL Shortener</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/auth/logout">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="url-card">
+          <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold mb-3">
+              <i class="fas fa-link header-icon"></i>URL Shortener
+            </h1>
+            <p class="lead text-muted">Shorten your long URLs into clean, manageable links</p>
+          </div>
+
+          <% if (locals.error) { %>
+            <div class="alert alert-danger mb-4">
+              <i class="fas fa-exclamation-circle me-2"></i><%= error %>
+            </div>
+          <% } %>
+
+          <% if (locals.success) { %>
+            <div class="alert alert-success mb-4">
+              <i class="fas fa-check-circle me-2"></i><%= success %>
+            </div>
+          <% } %>
+
+          <% if (locals.id) { %>
+            <div class="alert alert-success mb-4">
+              <h5 class="mb-2"><i class="fas fa-check-circle me-2"></i>URL successfully shortened!</h5>
+              <p class="mb-2"><strong>Original URL:</strong> <small class="text-muted"><%= originalUrl %></small></p>
+              <div class="generated-url d-flex align-items-center">
+                <span class="me-2"><strong>Your shortened URL:</strong></span>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="<%= shortUrl %>" id="shortUrl" readonly>
+                  <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-1"></i> Copy
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <a href="/dashboard" class="btn btn-outline-primary">
+                  <i class="fas fa-chart-line me-1"></i> View All My URLs
+                </a>
+                <a href="<%= shortUrl %>" target="_blank" class="btn btn-outline-success ms-2">
+                  <i class="fas fa-external-link-alt me-1"></i> Test URL
+                </a>
+              </div>
+            </div>
+          <% } %>
+
+          <form action="/url" method="post" class="needs-validation" novalidate>
+            <div class="mb-4">
+              <label for="urls" class="form-label fw-bold">Enter your original URL</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                <input 
+                  type="url" 
+                  class="form-control form-control-lg" 
+                  name="url" 
+                  id="urls" 
+                  placeholder="https://www.example.com"
+                  required
+                >
+                <div class="invalid-feedback">
+                  Please enter a valid URL
+                </div>
+              </div>
+              <div class="form-text">Enter the complete URL including http:// or https://</div>
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-cut me-2"></i>Shorten URL
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Form validation
+    (function() {
+      'use strict';
+      const forms = document.querySelectorAll('.needs-validation');
+      Array.from(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    })();
+    
+    // Copy to clipboard function
+    function copyToClipboard() {
+      const copyText = document.getElementById("shortUrl");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(copyText.value);
+      
+      // Create and show a temporary toast notification
+      const toast = document.createElement('div');
+      toast.className = 'position-fixed bottom-0 end-0 p-3';
+      toast.style.zIndex = '11';
+      toast.innerHTML = `
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header">
+            <strong class="me-auto">URL Shortener</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">
+            <i class="fas fa-check-circle text-success me-2"></i>Copied to clipboard!
+          </div>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      
+      // Remove the toast after 3 seconds
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
